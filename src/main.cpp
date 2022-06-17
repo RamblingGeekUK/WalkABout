@@ -8,11 +8,9 @@ const char simPIN[] = "";
 
 // Server details
 // The server variable can be just a domain name or it can have a subdomain. It depends on the service you are using
-// const char server[] = "walkabout.azurewebsites.net"; // domain name: example.com, maker.ifttt.com, etc
-// const char resource[] = "/saveLocation?Longitude=tlsesp32&Latitude=tlsesp32";         // resource path, for example: /post-data.php
-// const int  port = 443;                             // server port number
-
-const char* endpoint = "http://walkabout.azurewebsites.net";
+const char server[] = "walkabout.azurewebsites.net"; // domain name: example.com, maker.ifttt.com, etc
+const char resource[] = "/saveLocation?Longitude=tlsesp32&Latitude=tlsesp32";         // resource path, for example: /post-data.php
+const int  port = 443;                             // server port number
 
 // Keep this API Key value to be compatible with the PHP code provided in the project page.
 // If you change the apiKeyValue value, the PHP file /post-data.php also needs to have the same key
@@ -60,7 +58,7 @@ TwoWire I2CPower = TwoWire(0);
 // TinyGsmClient client(modem);
 
 TinyGsmClientSecure secureClient(modem, 0);
-// HttpClient walkaboutClient;
+HttpClient http_client = HttpClient(secureClient, server, port);
 
 #define uS_TO_S_FACTOR 1000000UL /* Conversion factor for micro seconds to seconds */
 #define TIME_TO_SLEEP 300        /* Time ESP32 will go to sleep (in seconds) 3600 seconds = 1 hour */
@@ -144,32 +142,6 @@ String urlencode(const String &s)
     return result;
 }
 
-void loop()
-{
-    SerialMon.print("Connecting to APN : ");
-    SerialMon.print(apn);
-    if (!modem.gprsConnect(apn, gprsUser, gprsPass))
-    {
-        SerialMon.println(" fail");
-    }
-    else
-    {
-       
-        delay(5000);
-
-        SerialMon.println();
-
-        // Close client and disconnect
-        secureClient.stop();
-        SerialMon.println(F("Server disconnected"));
-        modem.gprsDisconnect();
-        SerialMon.println(F("GPRS disconnected"));
-    }
-
-    // Put ESP32 into deep sleep mode (with timer wake up)
-    esp_deep_sleep_start();
-}
-
 //**************************************************************************************************
 void Post(const char* method, const String & path , const String & data, HttpClient* http) {
   String response;
@@ -181,8 +153,7 @@ void Post(const char* method, const String & path , const String & data, HttpCli
   if (path[0] != '/') {
     url = "/";
   }
-  url += path + ".json";
-  url += "?auth=";
+  url += path; 
   Serial.print("POST:");
   Serial.println(url);
   Serial.print("Data:");
@@ -211,3 +182,29 @@ void Post(const char* method, const String & path , const String & data, HttpCli
   }
   //NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
 }
+
+
+void loop()
+{
+    SerialMon.print("Connecting to APN : ");
+    SerialMon.print(apn);
+    if (!modem.gprsConnect(apn, gprsUser, gprsPass))
+    {
+        SerialMon.println(" fail");
+    }
+    else
+    {
+        delay(5000);
+        SerialMon.println();
+        Post("POST",server, resource, &http_client);
+        // Close client and disconnect
+        secureClient.stop();
+        SerialMon.println(F("Server disconnected"));
+        modem.gprsDisconnect();
+        SerialMon.println(F("GPRS disconnected"));
+    }
+
+    // Put ESP32 into deep sleep mode (with timer wake up)
+    esp_deep_sleep_start();
+}
+
