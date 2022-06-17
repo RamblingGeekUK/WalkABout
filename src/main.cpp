@@ -9,8 +9,9 @@ const char simPIN[] = "";
 // Server details
 // The server variable can be just a domain name or it can have a subdomain. It depends on the service you are using
 const char server[] = "walkabout.azurewebsites.net"; // domain name: example.com, maker.ifttt.com, etc
-const char resource[] = "/saveLocation?Longitude=tlsesp32&Latitude=tlsesp32";         // resource path, for example: /post-data.php
-const int  port = 443;                             // server port number
+const char post[] = "/saveLocation";
+const char resource[] = "?Longitude=tlsesp32&Latitude=tlsesp32";  // resource path, for example: /post-data.php
+const int  port = 443;                               // server port number
 
 // Keep this API Key value to be compatible with the PHP code provided in the project page.
 // If you change the apiKeyValue value, the PHP file /post-data.php also needs to have the same key
@@ -158,10 +159,13 @@ void Post(const char* method, const String & path , const String & data, HttpCli
   Serial.println(url);
   Serial.print("Data:");
   Serial.println(data);
-  //NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
   
+  Serial.print(server);
+  Serial.print(url);
+ 
+
   String contentType = "application/json";
-  http->put(url, contentType, data);
+  http->post(server + url, contentType, data);
   
   //NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
   // read the status code and body of the response
@@ -196,7 +200,7 @@ void loop()
     {
         delay(5000);
         SerialMon.println();
-        Post("POST",server, resource, &http_client);
+        Post("POST",post, resource, &http_client);
         // Close client and disconnect
         secureClient.stop();
         SerialMon.println(F("Server disconnected"));
