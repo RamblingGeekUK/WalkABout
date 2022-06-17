@@ -154,43 +154,7 @@ void loop()
     }
     else
     {
-        // String ussd_balance = modem.sendUSSD("*111#");
-        // SerialMon.println("");
-        // SerialMon.print("Balance           : ");
-        // SerialMon.println(ussd_balance);
-        // SerialMon.print("Signal Quaility   : ");
-        // SerialMon.println(modem.getSignalQuality());
-        // SerialMon.print("Local IP          : ");
-        // SerialMon.println(modem.localIP());
-        // SerialMon.print("Network Connected : ");
-        // SerialMon.println(modem.isNetworkConnected());
-        // SerialMon.print("GSM GPS Location  : ");
-        // // SerialMon.println(modem.getGsmLocation());
-        // SerialMon.print("Modem Information : ");
-        // SerialMon.println(modem.getModemInfo());
-        // SerialMon.print("Network Operator  : ");
-        // SerialMon.println(modem.getOperator());
-        // SerialMon.print("Battery State     : ");
-        // SerialMon.println(modem.getBattChargeState());
-        // // SerialMon.print("Connecting to     : ");
-        // // SerialMon.print(endpoint);
-   
-        SerialMon.print("------------------------------------");
-        secureClient.println("AT+HTTPSSL=?");
-        SerialMon.print("------------------------------------");
-    
-        // String httpRequestData = "/saveLocation?Longitude=CMJTestESP32Cam-NoCERT&Latitude=helloworld";
-        // String encodedHttpRequestData = urlencode(httpRequestData);
-        // Serial.println("urlencoded: " + (String)encodedHttpRequestData);
-        // Serial.println("");
-        // Serial.println("");
-        // Serial.println("request: " + (String)endpoint + httpRequestData);
-        // walkaboutClient.begin((String)endpoint + httpRequestData);
-        // int walkaboutClientResponseCode = walkaboutClient.POST(httpRequestData);
-
-        // Serial.println("walkaboutClientResponseCode was: " + String(walkaboutClientResponseCode));
-
-        // walkaboutClient.end();
+       
         delay(5000);
 
         SerialMon.println();
@@ -206,3 +170,44 @@ void loop()
     esp_deep_sleep_start();
 }
 
+//**************************************************************************************************
+void Post(const char* method, const String & path , const String & data, HttpClient* http) {
+  String response;
+  int statusCode = 0;
+  http->connectionKeepAlive(); // Currently, this is needed for HTTPS
+  
+  //NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+  String url;
+  if (path[0] != '/') {
+    url = "/";
+  }
+  url += path + ".json";
+  url += "?auth=";
+  Serial.print("POST:");
+  Serial.println(url);
+  Serial.print("Data:");
+  Serial.println(data);
+  //NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+  
+  String contentType = "application/json";
+  http->put(url, contentType, data);
+  
+  //NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+  // read the status code and body of the response
+  //statusCode-200 (OK) | statusCode -3 (TimeOut)
+  statusCode = http->responseStatusCode();
+  Serial.print("Status code: ");
+  Serial.println(statusCode);
+  response = http->responseBody();
+  Serial.print("Response: ");
+  Serial.println(response);
+  //NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+
+  //NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+  if (!http->connected()) {
+    Serial.println();
+    http->stop();// Shutdown
+    Serial.println("HTTP POST disconnected");
+  }
+  //NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+}
